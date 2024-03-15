@@ -1,21 +1,21 @@
 buildscript {
 	repositories {
-		jcenter()
 		mavenCentral()
+		maven { url "https://plugins.gradle.org/m2/" }
 		maven {
 			name = 'forge'
 			url = 'https://maven.minecraftforge.net/'
 		}
 	}
 	dependencies {
-		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+		classpath('com.anatawa12.forge:ForgeGradle:2.3-1.0.+') {
+			changing = true
+		}
 	}
 }
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
 
-version = "${minecraft_version}-${mod_version}"
+apply plugin: 'net.minecraftforge.gradle.forge'
+
 group = 'sonar.fluxnetworks'
 archivesBaseName = 'FluxNetworks'
 
@@ -42,93 +42,30 @@ sourceSets {
 }
 
 minecraft {
-	mappings channel: 'stable', version: '39-1.12'
-
-	runs {
-		client {
-			workingDirectory project.file('run')
-
-			// Recommended logging data for a userdev environment
-			property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-			// Recommended logging level for the console
-			property 'forge.logging.console.level', 'debug'
-		}
-
-		server {
-
-			// Recommended logging data for a userdev environment
-			property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-			// Recommended logging level for the console
-			property 'forge.logging.console.level', 'debug'
-		}
-	}
+	version = '1.12.2-14.23.5.2838'
+	mappings = 'stable_39'
+	runDir = 'run'
 }
 
 repositories {
-	maven {
-		// location of the maven that hosts JEI files
-		name 'Progwml6 maven'
-		url 'https://dvs1.progwml6.com/files/maven/'
-	}
-	maven {
-		// The One Probe
-		name 'tterrag maven'
-		url 'https://maven.tterrag.com/'
-	}
-	maven {
-		// Open Computers
-		url "http://maven.cil.li/"
-	}
-	maven {
-		// location of a maven that hosts all files on CurseForge
-		name 'CurseMaven'
-		url 'https://www.cursemaven.com/'
-	}
+	mavenLocal()
+	mavenCentral()
 }
 
 dependencies {
-	minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-	compileOnly fg.deobf("mezz.jei:jei_${minecraft_version}:${jei_version}:api")
-
-	compile fg.deobf("mcjty.theoneprobe:TheOneProbe-1.12:${top_version}")
-
-	compileOnly fg.deobf("li.cil.oc:OpenComputers:MC${minecraft_version}-1.7.5.213:api")
-
-	compile fg.deobf("curse.maven:baubles-227083:2518667")
-	compileOnly fg.deobf("curse.maven:gregtechce-293327:3167656")
-	compileOnly fg.deobf("curse.maven:industrial-craft-242638:2746894")
-	compileOnly fg.deobf("curse.maven:mekanism-268560:2835176")
-	compileOnly fg.deobf("curse.maven:redstone-flux-270789:2920436")
-}
-
-processResources {
-	inputs.property "version", mod_version
-	inputs.property "mcversion", minecraft_version
-
-	from(sourceSets.main.resources.srcDirs) {
-		include 'mcmod.info'
-
-		expand 'version': mod_version, 'mcversion': minecraft_version
-	}
-
-	from(sourceSets.main.resources.srcDirs) {
-		exclude 'mcmod.info'
-	}
+	implementation fileTree(dir: project.lib, include: ['*-dev.jar', '*-deobf.jar'], exclude: [])
 }
 
 jar {
 	manifest {
 		attributes([
-				"Specification-Title"     : "Flux-Networks",
-				"Specification-Vendor"    : "SonarSonic",
-				"Specification-Version"   : "1",
-				"Implementation-Title"    : project.name,
-				"Implementation-Version"  : "${version}",
-				"Implementation-Vendor"   : "SonarSonic",
-				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+			"Specification-Title"     : "Flux-Networks",
+			"Specification-Vendor"    : "SonarSonic",
+			"Specification-Version"   : "1",
+			"Implementation-Title"    : project.name,
+			"Implementation-Version"  : "${version}",
+			"Implementation-Vendor"   : "SonarSonic",
+			"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
 		])
 	}
 }
