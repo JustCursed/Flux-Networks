@@ -1,23 +1,7 @@
-buildscript {
-	repositories {
-		mavenCentral()
-		maven { url "https://plugins.gradle.org/m2/" }
-		maven {
-			name = 'forge'
-			url = 'https://maven.minecraftforge.net/'
-		}
-	}
-	dependencies {
-		classpath('com.anatawa12.forge:ForgeGradle:2.3-1.0.+') {
-			changing = true
-		}
-	}
+plugins {
+	id 'com.gtnewhorizons.gtnhconvention'
+	id 'idea'
 }
-
-apply plugin: 'net.minecraftforge.gradle.forge'
-
-group = 'sonar.fluxnetworks'
-archivesBaseName = 'FluxNetworks'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
@@ -37,14 +21,11 @@ sourceSets {
 		}
 		compileClasspath += sourceSets.api.output
 		runtimeClasspath += sourceSets.api.output
-		output.resourcesDir = java.outputDir
 	}
 }
 
 minecraft {
-	version = '1.12.2-14.23.5.2838'
-	mappings = 'stable_39'
-	runDir = 'run'
+	mcVersion.set("1.12.2")
 }
 
 repositories {
@@ -53,7 +34,7 @@ repositories {
 }
 
 dependencies {
-	implementation fileTree(dir: project.lib, include: ['*-dev.jar', '*-deobf.jar'], exclude: [])
+	implementation fileTree(dir: project.lib, include: ['*.jar'], exclude: [])
 }
 
 jar {

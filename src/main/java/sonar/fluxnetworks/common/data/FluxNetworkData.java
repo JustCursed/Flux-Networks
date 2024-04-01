@@ -58,7 +58,7 @@ public class FluxNetworkData extends WorldSavedData {
 
     public static String PLAYER_LIST = "playerList";
     public static String NETWORK_FOLDERS = "folders";
-    public static String UNLOADED_CONNECTIONS = "unloaded";
+    public static String CONNECTORS = "connectors";
 
     public static String OLD_NETWORK_ID = "id";
     public static String OLD_NETWORK_NAME = "name";
@@ -106,7 +106,6 @@ public class FluxNetworkData extends WorldSavedData {
         if (savedData == null) {
             File oldFile = new File(world.getSaveHandler().getWorldDirectory(), "data/sonar.flux.networks.configurations.dat");
             if (oldFile.exists()) {
-                //oldFile.renameTo(new File(oldFile.getParent(), FluxNetworkData.NETWORK_DATA + ".dat"));
                 try {
                     FileUtils.copyFile(oldFile, new File(oldFile.getParent(), FluxNetworkData.NETWORK_DATA + ".dat"));
                 } catch (IOException e) {
@@ -151,7 +150,7 @@ public class FluxNetworkData extends WorldSavedData {
                 addNetwork(network);
             }
         }
-        readChunks(nbt);
+
         data = this;
     }
 
@@ -168,7 +167,6 @@ public class FluxNetworkData extends WorldSavedData {
         compound.setTag(NETWORKS, list);
 
         NBTTagCompound tag = new NBTTagCompound();
-        loadedChunks.forEach((dim, pos) -> writeChunks(dim, pos, tag));
         compound.setTag(LOADED_CHUNKS, tag);
         return compound;
     }
@@ -177,6 +175,7 @@ public class FluxNetworkData extends WorldSavedData {
         if(!nbt.hasKey(PLAYER_LIST)) {
             return;
         }
+
         List<NetworkMember> a = new ArrayList<>();
         NBTTagList list = nbt.getTagList(PLAYER_LIST, Constants.NBT.TAG_COMPOUND);
         for(int i = 0; i < list.tagCount(); i++) {
@@ -216,41 +215,41 @@ public class FluxNetworkData extends WorldSavedData {
     }
 
     public static void readConnections(IFluxNetwork network, @Nonnull NBTTagCompound nbt) {
-        if(!nbt.hasKey(UNLOADED_CONNECTIONS)) {
+        if(!nbt.hasKey(CONNECTORS)) {
             return;
         }
-        List<IFluxConnector> a = new ArrayList<>();
-        NBTTagList list = nbt.getTagList(UNLOADED_CONNECTIONS, Constants.NBT.TAG_COMPOUND);
+        List<IFluxConnector> connectors = new ArrayList<>();
+        NBTTagList list = nbt.getTagList(CONNECTORS, Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < list.tagCount(); i++) {
-            a.add(new FluxLiteConnector(list.getCompoundTagAt(i)));
+            connectors.add(new FluxLiteConnector(list.getCompoundTagAt(i)));
         }
-        network.getSetting(NetworkSettings.ALL_CONNECTORS).addAll(a);
+        network.getSetting(NetworkSettings.ALL_CONNECTORS).addAll(connectors);
     }
 
     public static NBTTagCompound writeConnections(IFluxNetwork network, @Nonnull NBTTagCompound nbt) {
-        List<IFluxConnector> a = network.getSetting(NetworkSettings.ALL_CONNECTORS);
-        if(!a.isEmpty()) {
+        List<IFluxConnector> connectors = network.getSetting(NetworkSettings.ALL_CONNECTORS);
+        if(!connectors.isEmpty()) {
             NBTTagList list = new NBTTagList();
-            a.forEach(s -> {
-                if(!s.isChunkLoaded()) {
-                    list.appendTag(s.writeCustomNBT(new NBTTagCompound(), NBTType.DEFAULT));
+            connectors.forEach(connector -> {
+                if(!connector.isChunkLoaded()) {
+                    list.appendTag(connector.writeCustomNBT(new NBTTagCompound(), NBTType.DEFAULT));
                 }
             });
-            nbt.setTag(UNLOADED_CONNECTIONS, list);
+            nbt.setTag(CONNECTORS, list);
         }
         return nbt;
     }
 
     public static void readAllConnections(IFluxNetwork network, @Nonnull NBTTagCompound nbt) {
-        if(!nbt.hasKey(UNLOADED_CONNECTIONS)) {
+        if(!nbt.hasKey(CONNECTORS)) {
             return;
         }
-        List<IFluxConnector> a = new ArrayList<>();
-        NBTTagList list = nbt.getTagList(UNLOADED_CONNECTIONS, Constants.NBT.TAG_COMPOUND);
-        for (int i = 0; i < list.tagCount(); i++) {
-            a.add(new FluxLiteConnector(list.getCompoundTagAt(i)));
+        List<IFluxConnector> connectors = new ArrayList<>();
+        NBTTagList tagList = nbt.getTagList(CONNECTORS, Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            connectors.add(new FluxLiteConnector(tagList.getCompoundTagAt(i)));
         }
-        network.setSetting(NetworkSettings.ALL_CONNECTORS, a);
+        network.setSetting(NetworkSettings.ALL_CONNECTORS, connectors);
     }
 
     public static NBTTagCompound writeAllConnections(IFluxNetwork network, @Nonnull NBTTagCompound nbt) {
@@ -258,36 +257,7 @@ public class FluxNetworkData extends WorldSavedData {
         if(!a.isEmpty()) {
             NBTTagList list = new NBTTagList();
             a.forEach(s -> list.appendTag(s.writeCustomNBT(new NBTTagCompound(), NBTType.DEFAULT)));
-            nbt.setTag(UNLOADED_CONNECTIONS, list);
-        }
-        return nbt;
-    }
-
-    private void readChunks(NBTTagCompound nbt) {
-        if(!nbt.hasKey(LOADED_CHUNKS)) {
-            return;
-        }
-        NBTTagCompound tags = nbt.getCompoundTag(LOADED_CHUNKS);
-        for(String key : tags.getKeySet()) {
-            NBTTagList list = tags.getTagList(key, Constants.NBT.TAG_COMPOUND);
-            List<ChunkPos> pos = loadedChunks.computeIfAbsent(Integer.valueOf(key), l -> new ArrayList<>());
-            for (int i = 0; i < list.tagCount(); i++) {
-                NBTTagCompound tag = list.getCompoundTagAt(i);
-                pos.add(new ChunkPos(tag.getInteger("x"), tag.getInteger("z")));
-            }
-        }
-    }
-
-    private NBTTagCompound writeChunks(int dim, List<ChunkPos> pos, NBTTagCompound nbt) {
-        if(!pos.isEmpty()) {
-            NBTTagList list = new NBTTagList();
-            pos.forEach(p -> {
-                NBTTagCompound t = new NBTTagCompound();
-                t.setInteger("x", p.x);
-                t.setInteger("z", p.z);
-                list.appendTag(t);
-            });
-            nbt.setTag(String.valueOf(dim), list);
+            nbt.setTag(CONNECTORS, list);
         }
         return nbt;
     }

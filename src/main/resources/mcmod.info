@@ -1,10 +1,10 @@
 [
 {
-  "modid": "fluxnetworks",
-  "name": "Flux Networks",
+  "modid": "${modId}",
+  "name": "${modName}",
   "description": "Wireless Energy Networks.",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
+  "version": "${modVersion}",
+  "mcversion": "${minecraftVersion}",
   "url": "https://www.curseforge.com/minecraft/mc-mods/flux-networks",
   "updateUrl": "",
   "authorList": ["Sonar Sonic","BloCamLimb"],
